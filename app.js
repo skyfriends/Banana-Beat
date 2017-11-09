@@ -9,7 +9,17 @@ var bpm = 80;
 var currentBeat = 0;
 
 var audioContext;
-audioContext = new AudioContext || window.webkitAudioContext();
+
+try {
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  audioContext = new AudioContext();
+} catch(error) {
+  console.error(error);
+  var mainPage = document.getElementsByTagName('main')[0];
+  var browserError = '<div id="browser-error"><img src="img/sadbanana.gif"><h1>Sorry, Banana Beat is not supported by your browser.</h1><p>Try using <a href="https://www.google.com/chrome/">Chrome</a> or <a href="https://www.mozilla.org/firefox/">Firefox</a>.</p></div>';
+  mainPage.innerHTML = browserError;
+  document.getElementById('banana-spiral').className = '';
+}
 
 // DRUM OBJECT
 
@@ -670,7 +680,7 @@ function decode(code) {
     }
     drum += binaryHalf;
     if (i % 2) {
-      if (binaryList.length > 16) {
+      if (drum.length > 16) {
         return null;
       }
       binaryList.push(drum);
@@ -715,11 +725,12 @@ var pianoLabels = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K'];
 
 function generatePiano() {
   var table = document.getElementById('piano');
-  var volumeBox = document.createElement('td');
+  var volumeBox = document.createElement('div');
   volumeBox.id = 'piano-volume';
   volumeBox.textContent = 'Volume';
+  table.parentElement.parentElement.insertBefore(volumeBox, table.parentElement);
   var row = document.createElement('tr');
-  row.appendChild(volumeBox);
+  // row.appendChild(volumeBox);
   var pianoVolumeSlider = document.createElement('input');
   pianoVolumeSlider.type = 'range';
   pianoVolumeSlider.min = '0';
