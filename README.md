@@ -4,7 +4,7 @@
   
 
 <p align="center">
-  <h2 align="center"> The only drum machine/synthesizer combo<br /><br/> written in (just under)<br/><br /> 1200 lines of <i>vanilla</i> javascript that you will ever need.</h2>
+  <h2 align="center"> The only drum machine/synthesizer combo<br /><br/> written in (just under) 1200 lines<br/><br /> of <i>vanilla</i> javascript that you will ever need.</h2>
   </p>
 
 <p align="center">
