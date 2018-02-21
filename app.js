@@ -1,58 +1,31 @@
 'use strict';
-
-// GLOBALS
-
-var MINUTE = 60000;//IT's OVER 9000!!!!(What!? 9000!?!?!)
-
-var bpm = 80;
-
-var currentBeat = 0;
-
-var audioContext;
+const Drum = require('./modules/drum.js');
+const MINUTE = 60000;
+const bpm = 80;
+const currentBeat = 0;
+let audioContext;
 
 try {
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   audioContext = new AudioContext();
-} catch(error) {
+} catch (error) {
   console.error(error);
   var mainPage = document.getElementsByTagName('main')[0];
-  var browserError = '<div id="browser-error"><img src="img/sadbanana.gif"><h1>Sorry, Banana Beat is not supported by your browser.</h1><p>Try using <a href="https://www.google.com/chrome/">Chrome</a> or <a href="https://www.mozilla.org/firefox/">Firefox</a>.</p></div>';
+  var browserError =
+    '<div id="browser-error"><img src="img/sadbanana.gif"><h1>Sorry, Banana Beat is not supported by your browser.</h1><p>Try using <a href="https://www.google.com/chrome/">Chrome</a> or <a href="https://www.mozilla.org/firefox/">Firefox</a>.</p></div>';
   mainPage.innerHTML = browserError;
   document.getElementById('banana-spiral').className = '';
 }
 
-// DRUM OBJECT
-
-function Drum(name, sample){
-  this.context = audioContext;
-  this.drumGain = audioContext.createGain();
-  this.drumGain.gain.value = 0;
-  this.name = name;
-  this.sample = sample;
-  this.playTriggers = new Array(16).fill(false);
-  this.soundVolume = .5;
-  this.muted = false;
-}
-
-Drum.prototype.playDrum = function(){
-  var sound = new Audio(this.sample);
-  sound.volume = this.soundVolume;
-  sound.play();
-  sound.muted = this.muted;
-};
-
-// TABLE GENERATION
-
 function generateTable(drumList) {
-  for(var i = 0; i < drumList.length; i++) {
+  for (var i = 0; i < drumList.length; i++) {
     generateRow(drumList[i]);
-
   }
 }
 
 var sliderZIndex = 1000;
 
-function generateRow(drum, drumRow) {
+const generateRow = (drum, drumRow) => {
   var table = document.getElementById('grid-beat');
   var row = document.createElement('tr');
   var drumName = document.createElement('td');
@@ -92,10 +65,10 @@ function generateRow(drum, drumRow) {
   drumName.appendChild(volumeControls);
   row.appendChild(drumName);
 
-  function handleClickOnVolumeBox(){
-    if (volumeSlider.style.display == 'none'){
+  function handleClickOnVolumeBox() {
+    if (volumeSlider.style.display == 'none') {
       volumeSlider.style.display = 'inline-block';
-    } else if (volumeSlider.style.display == 'inline-block'){
+    } else if (volumeSlider.style.display == 'inline-block') {
       volumeSlider.style.display = 'none';
     }
   }
@@ -112,11 +85,13 @@ function generateRow(drum, drumRow) {
     }
     beatBox.setAttribute('count-index', i);
     row.appendChild(beatBox);
-    beatBox.addEventListener('click', function(e) {toggleTrigger(e, drum);});
+    beatBox.addEventListener('click', function(e) {
+      toggleTrigger(e, drum);
+    });
   }
   row.setAttribute('id', drumRow);
   table.appendChild(row);
-}
+};
 
 function toggleTrigger(e, drum) {
   var beatBox = e.target;
@@ -133,29 +108,35 @@ function toggleTrigger(e, drum) {
 }
 
 function randomColor() {
-  return 'hsl(' + (Math.random()*360) + ', 80%, 50%)';
+  return 'hsl(' + Math.random() * 360 + ', 80%, 50%)';
 }
 
 // VOLUME change
 
-function handleVolumeChange(e){
+function handleVolumeChange(e) {
   var newVolume = e.target.value;
-  for(var i = 0; i < allDrums.length; i++){
+  for (var i = 0; i < allDrums.length; i++) {
     console.log(allDrums[i].id);
-    if(e.target.id == allDrums[i].name){
+    if (e.target.id == allDrums[i].name) {
       allDrums[i].soundVolume = newVolume;
     }
   }
 }
 
-function handleMuteButton(e){
-  for(var i = 0; i < allDrums.length; i++){
-    if(e.target.id == allDrums[i].name && e.target.className.split(' ')[1] === 'mute') {
+function handleMuteButton(e) {
+  for (var i = 0; i < allDrums.length; i++) {
+    if (
+      e.target.id == allDrums[i].name &&
+      e.target.className.split(' ')[1] === 'mute'
+    ) {
       console.log(allDrums[i].soundVolume);
       allDrums[i].muted = true;
       e.target.className = e.target.className.split(' ')[0] + ' unmute';
       e.target.style.backgroundColor = '#f43030';
-    } else if(e.target.id == allDrums[i].name && e.target.className.split(' ')[1] === 'unmute') {
+    } else if (
+      e.target.id == allDrums[i].name &&
+      e.target.className.split(' ')[1] === 'unmute'
+    ) {
       allDrums[i].muted = false;
       e.target.className = e.target.className.split(' ')[0] + ' mute';
       e.target.style.backgroundColor = '#999';
@@ -178,103 +159,112 @@ function handleTempoChange(e) {
   var newBpm = Math.round(e.target.value);
   if (newBpm < 20) {
     newBpm = 20;
-  } else if(newBpm > 200) {
+  } else if (newBpm > 200) {
     newBpm = 200;
   }
   loadTempo(newBpm);
   resetExportCode();
 }
 
-
 // PLAY THE MUSIC
 
-var snare = function(){
+let snare = () => new Drum('Snare', 'Samples/snare-acoustic01.mp3');
+let hihat = () => new Drum('Hi-Hat', 'Samples/hihat-dist01.mp3');
 
-  return new Drum('Snare', 'Samples/snare-acoustic01.mp3');
+var kick = function() {
+  return new Drum('Kick', 'Samples/kick-classic.mp3');
 };
 
-var hihat = function(){
-  return  new Drum('Hi-Hat', 'Samples/hihat-dist01.mp3');
+var tom1 = function() {
+  return new Drum('Tom (1)', 'Samples/tom-acoustic01.mp3');
 };
 
-var kick = function(){
-  return  new Drum('Kick', 'Samples/kick-classic.mp3');
+var tom2 = function() {
+  return new Drum('Tom (2)', 'Samples/tom-acoustic02.mp3');
 };
 
-var tom1 = function(){
-  return  new Drum('Tom (1)', 'Samples/tom-acoustic01.mp3');
+var crash = function() {
+  return new Drum(
+    'Crash',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion (2)/ED Crash/ED Crash 09.wav'
+  );
 };
 
-var tom2 = function(){
-  return  new Drum('Tom (2)', 'Samples/tom-acoustic02.mp3');
+var goat1 = function() {
+  return new Drum('Goat (1)', 'random samples/Goat-sound-effectedit1.mp3');
 };
 
-var crash = function(){
-  return  new Drum('Crash', 'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion (2)/ED Crash/ED Crash 09.wav');
+var goat2 = function() {
+  return new Drum('Goat (2)', 'random samples/Goat-sound-effectedit2.mp3');
 };
 
-
-
-var goat1 = function(){
-  return  new Drum ('Goat (1)', 'random samples/Goat-sound-effectedit1.mp3');
+var goat3 = function() {
+  return new Drum('Goat (3)', 'random samples/Goat-sound-effectiedit3.mp3');
 };
 
-var goat2 = function(){
-  return  new Drum ('Goat (2)', 'random samples/Goat-sound-effectedit2.mp3');
+var bass = function() {
+  return new Drum('Bass', 'random samples/Live_bass_Bitz_116.mp3');
 };
 
-var goat3 = function(){
-  return  new Drum ('Goat (3)', 'random samples/Goat-sound-effectiedit3.mp3');
+var bass2 = function() {
+  return new Drum(
+    'Bass (2)',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Bassdrums/ED Bassdrums 33.wav'
+  );
 };
 
-
-var bass = function(){
-  return  new Drum ('Bass', 'random samples/Live_bass_Bitz_116.mp3');
+var percussion1 = function() {
+  return new Drum(
+    'ED Tom',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion/ED Percussion 02.wav'
+  );
 };
 
-var bass2 = function(){
-  return  new Drum ('Bass (2)', 'electro-flux-sound-kit/Electro Flux Sound Kit/Bassdrums/ED Bassdrums 33.wav');
+var snare2 = function() {
+  return new Drum(
+    'ED Snare',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Snares/ED Snares 21.wav'
+  );
 };
 
-var percussion1 = function(){
-  return  new Drum ('ED Tom', 'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion/ED Percussion 02.wav');
+var percussion2 = function() {
+  return new Drum(
+    'ED Click',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Synths/ED Synths 10.wav'
+  );
 };
 
-var snare2 = function(){
-  return  new Drum ('ED Snare', 'electro-flux-sound-kit/Electro Flux Sound Kit/Snares/ED Snares 21.wav');
+var synth1 = function() {
+  return new Drum(
+    'ED Synth',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Synths/ED Synths 02.wav'
+  );
 };
 
-var percussion2 = function(){
-  return  new Drum ('ED Click', 'electro-flux-sound-kit/Electro Flux Sound Kit/Synths/ED Synths 10.wav');
+var crash2 = function() {
+  return new Drum(
+    'ED Crash',
+    'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion (2)/ED Crash/ED Crash 11.wav'
+  );
 };
 
-var synth1 = function(){
-  return  new Drum ('ED Synth', 'electro-flux-sound-kit/Electro Flux Sound Kit/Synths/ED Synths 02.wav');
+var guitar1 = function() {
+  return new Drum('Guitar Loop', 'random samples/Guitar_loop32(160BPM).mp3');
 };
 
-var crash2 = function(){
-  return  new Drum ('ED Crash', 'electro-flux-sound-kit/Electro Flux Sound Kit/Percussion (2)/ED Crash/ED Crash 11.wav');
+var synthLoop = function() {
+  return new Drum('Synth Loop', 'random samples/scifi-bass.wav');
 };
 
-var guitar1 = function(){
-  return  new Drum ('Guitar Loop', 'random samples/Guitar_loop32(160BPM).mp3');
+var bass3 = function() {
+  return new Drum('Bass Loop', 'random samples/Bass125A-01.mp3');
 };
 
-var synthLoop = function(){
-  return  new Drum ('Synth Loop', 'random samples/scifi-bass.wav');
+var bassLoop2 = function() {
+  return new Drum('Bass Loop 2', 'random samples/EMOK1Bass86E-04.mp3');
 };
-
-var bass3 = function(){
-  return  new Drum ('Bass Loop', 'random samples/Bass125A-01.mp3');
-};
-
-var bassLoop2 = function(){
-  return  new Drum ('Bass Loop 2', 'random samples/EMOK1Bass86E-04.mp3');
-};
-
 
 var allDrums = [snare(), hihat(), kick(), tom1(), tom2(), crash()];
-
 
 var d0 = document.getElementById('d0');
 function switchToOption0() {
@@ -290,7 +280,14 @@ d1.addEventListener('click', switchToOption1);
 
 var d2 = document.getElementById('d2');
 function switchToOption2() {
-  loadDrumSetup([bass2(), percussion1(), percussion2(), snare2(), synth1(), crash2()]);
+  loadDrumSetup([
+    bass2(),
+    percussion1(),
+    percussion2(),
+    snare2(),
+    synth1(),
+    crash2(),
+  ]);
 }
 d2.addEventListener('click', switchToOption2);
 
@@ -301,10 +298,10 @@ function switchToOption3() {
   var index = checkForDrum(allDrums, guitar1());
   if (index < 0) {
     allDrums.push(guitar1());
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   } else {
     allDrums.splice(index, 1);
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   }
 }
 d3.addEventListener('click', switchToOption3);
@@ -314,10 +311,10 @@ function switchToOption4() {
   var index = checkForDrum(allDrums, bass());
   if (index < 0) {
     allDrums.push(bass());
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   } else {
     allDrums.splice(index, 1);
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   }
 }
 d4.addEventListener('click', switchToOption4);
@@ -327,10 +324,10 @@ function switchToOption5() {
   var index = checkForDrum(allDrums, synthLoop());
   if (index < 0) {
     allDrums.push(synthLoop());
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   } else {
     allDrums.splice(index, 1);
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   }
 }
 d5.addEventListener('click', switchToOption5);
@@ -340,10 +337,10 @@ function switchToOption6() {
   var index = checkForDrum(allDrums, bass3());
   if (index < 0) {
     allDrums.push(bass3());
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   } else {
     allDrums.splice(index, 1);
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   }
 }
 d6.addEventListener('click', switchToOption6);
@@ -353,10 +350,10 @@ function switchToOption7() {
   var index = checkForDrum(allDrums, bassLoop2());
   if (index < 0) {
     allDrums.push(bassLoop2());
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   } else {
     allDrums.splice(index, 1);
-    loadDrumSetup (allDrums);
+    loadDrumSetup(allDrums);
   }
 }
 d7.addEventListener('click', switchToOption7);
@@ -376,11 +373,20 @@ generateTable(allDrums);
 var playingInterval = setInterval(playBeat, MINUTE / (bpm * 4));
 
 var currentBanana = 0;
-var bananas = ['6.png', '7.png', '8.png', '1.png', '2.png', '3.png', '4.png', '5.png'];
+var bananas = [
+  '6.png',
+  '7.png',
+  '8.png',
+  '1.png',
+  '2.png',
+  '3.png',
+  '4.png',
+  '5.png',
+];
 
-function playBeat(){
-  for (var i = 0; i < allDrums.length; i++){
-    if (allDrums[i].playTriggers[currentBeat]){
+function playBeat() {
+  for (var i = 0; i < allDrums.length; i++) {
+    if (allDrums[i].playTriggers[currentBeat]) {
       allDrums[i].playDrum();
     }
   }
@@ -388,14 +394,15 @@ function playBeat(){
   for (i = 0; i < allBoxes.length; i++) {
     if (allBoxes[i].getAttribute('count-index') == currentBeat) {
       allBoxes[i].style.borderColor = '#FFDB42';
-    } else if (allBoxes[i].className != 'drum-label'){
+    } else if (allBoxes[i].className != 'drum-label') {
       allBoxes[i].style.borderColor = '#1e1e1e';
     }
   }
   currentBeat++;
   currentBeat %= 16;
 
-  document.getElementById('banana-beat').src = 'banana/banana'+bananas[currentBanana];
+  document.getElementById('banana-beat').src =
+    'banana/banana' + bananas[currentBanana];
   currentBanana++;
   currentBanana %= 8;
 }
@@ -407,7 +414,7 @@ var savedStates = [];
 
 try {
   savedStates = JSON.parse(localStorage.savedStates);
-} catch(error) {
+} catch (error) {
   console.info('No saved states available.');
 }
 
@@ -415,9 +422,13 @@ for (var save = 0; save < savedStates.length; save++) {
   generateSavedStateBox(savedStates[save], document.getElementById('saves'));
 }
 
-document.getElementById('save-form').addEventListener('submit', handleSaveSubmit);
+document
+  .getElementById('save-form')
+  .addEventListener('submit', handleSaveSubmit);
 
-document.getElementById('clear-saves').addEventListener('click', handleClearClick);
+document
+  .getElementById('clear-saves')
+  .addEventListener('click', handleClearClick);
 
 function handleSaveSubmit(e) {
   e.preventDefault();
@@ -429,14 +440,14 @@ function handleClearClick() {
   try {
     localStorage.clear();
     document.getElementById('saves').innerHTML = '';
-  } catch(error) {
+  } catch (error) {
     console.error('Unable to access localStorage:', error);
   }
 }
 
 //saves the current state
 function saveCurrentState(nameInput) {
-  if(!gridIsEmpty()) {
+  if (!gridIsEmpty()) {
     var currentState = {
       name: nameInput,
       setup: copyDrumsList(allDrums),
@@ -446,7 +457,7 @@ function saveCurrentState(nameInput) {
     generateSavedStateBox(currentState, document.getElementById('saves'));
     try {
       localStorage.savedStates = JSON.stringify(savedStates);
-    } catch(error) {
+    } catch (error) {
       console.error('Unable to save to localStorage:', error);
     }
   }
@@ -472,7 +483,9 @@ function generateSavedStateBox(state, allSavedBoxes) {
   removeBox.textContent = 'delete';
   saveBox.appendChild(removeBox);
 
-  removeBox.addEventListener('click', function(e) {handleDeleteClick(e, state);});
+  removeBox.addEventListener('click', function(e) {
+    handleDeleteClick(e, state);
+  });
 }
 
 function handleDeleteClick(e, state) {
@@ -482,7 +495,7 @@ function handleDeleteClick(e, state) {
   savedStates.splice(savedStates.indexOf(state), 1);
   try {
     localStorage.savedStates = JSON.stringify(savedStates);
-  } catch(error) {
+  } catch (error) {
     console.error('Unable to access localStorage:', error);
   }
 }
@@ -507,12 +520,14 @@ function loadTempo(tempo) {
   bpm = tempo;
   tempoSlider.value = bpm;
   tempoValue.value = bpm;
-  var isPlaying = document.getElementById('banana-spiral').className === 'spinning';
+  var isPlaying =
+    document.getElementById('banana-spiral').className === 'spinning';
   if (isPlaying) {
     clearInterval(playingInterval);
     playingInterval = setInterval(playBeat, MINUTE / (bpm * 4));
-    var spinSpeed = 9 - (((bpm - 20) / 180) * 8);
-    document.getElementById('banana-spiral').style.animationDuration = spinSpeed + 's';
+    var spinSpeed = 9 - (bpm - 20) / 180 * 8;
+    document.getElementById('banana-spiral').style.animationDuration =
+      spinSpeed + 's';
   }
 }
 
@@ -542,9 +557,13 @@ function copyDrumsList(drumList) {
 
 // EXPORT/IMPORT FUNCTIONALITY
 
-document.getElementById('export-form').addEventListener('submit', handleExportSubmit);
+document
+  .getElementById('export-form')
+  .addEventListener('submit', handleExportSubmit);
 
-document.getElementById('import-form').addEventListener('submit', handleImportSubmit);
+document
+  .getElementById('import-form')
+  .addEventListener('submit', handleImportSubmit);
 
 function handleExportSubmit(e) {
   e.preventDefault();
@@ -612,7 +631,7 @@ function encode(drumList) {
         binaryString += '0';
       }
     }
-    charOne = binaryString.slice(0,8); // fist byte
+    charOne = binaryString.slice(0, 8); // fist byte
     charOne = String.fromCharCode(parseInt(charOne, 2) + 215); // default ×
     charTwo = binaryString.slice(8); // second byte
     charTwo = String.fromCharCode(parseInt(charTwo, 2) + 215); // default ×
@@ -705,16 +724,18 @@ function decode(code) {
 
 // RANDOM DRUMS
 
-document.getElementById('random-button'). addEventListener('click', handleRandomizeClick);
+document
+  .getElementById('random-button')
+  .addEventListener('click', handleRandomizeClick);
 
 function handleRandomizeClick() {
   var code = '';
   // random setup
-  for (var char = 0; char < (allDrums.length * 2); char++) {
-    code += String.fromCharCode(Math.round((Math.random() * 255) + 215));
+  for (var char = 0; char < allDrums.length * 2; char++) {
+    code += String.fromCharCode(Math.round(Math.random() * 255 + 215));
   }
   // random tempo
-  code += ' ' + Math.round((Math.random() * 180) + 20);
+  code += ' ' + Math.round(Math.random() * 180 + 20);
 
   loadDrumSetup(decode(code));
 }
@@ -728,7 +749,10 @@ function generatePiano() {
   var volumeBox = document.createElement('div');
   volumeBox.id = 'piano-volume';
   volumeBox.textContent = 'Volume';
-  table.parentElement.parentElement.insertBefore(volumeBox, table.parentElement);
+  table.parentElement.parentElement.insertBefore(
+    volumeBox,
+    table.parentElement
+  );
   var row = document.createElement('tr');
   // row.appendChild(volumeBox);
   var pianoVolumeSlider = document.createElement('input');
@@ -753,27 +777,26 @@ generatePiano();
 var octave = 0;
 var octaveChange = document.getElementById('octave-menu');
 
-function handleOctaveChange(e){
+function handleOctaveChange(e) {
   octave = e.target.value - 4;
 }
 octaveChange.addEventListener('change', handleOctaveChange);
 
-
 var waveType = 'sine';
 var waveChange = document.getElementById('wave-menu');
 
-function handleWaveChange(e){
+function handleWaveChange(e) {
   waveType = e.target.value;
 }
 
 waveChange.addEventListener('change', handleWaveChange);
 
-var oscVolume = .5;
+var oscVolume = 0.5;
 
-function handlePianoVolumeChange(e){
+function handlePianoVolumeChange(e) {
   oscVolume = e.target.value;
 }
-function Note(frequency){
+function Note(frequency) {
   this.frequency = frequency * Math.pow(2, octave);
   this.osc = audioContext.createOscillator();
   this.osc.type = waveType;
@@ -783,23 +806,30 @@ function Note(frequency){
 
   this.osc.connect(this.gain);
   this.gain.connect(audioContext.destination);
-
 }
 
-
-Note.prototype.start = function () {
+Note.prototype.start = function() {
   this.osc.start(0);
-
 };
 
 Note.prototype.stop = function() {
   this.gain.gain.setTargetAtTime(0, audioContext.currentTime, 0.015);
 };
 
-
-
 var c, cSharp, d, dSharp, e, f, fSharp, g, gSharp, a, aSharp, b, cNext;
-var keyA, keyW, keyS, keyE, keyD, keyF, keyT, keyG, keyY, keyH, keyU, keyJ, keyK;
+var keyA,
+  keyW,
+  keyS,
+  keyE,
+  keyD,
+  keyF,
+  keyT,
+  keyG,
+  keyY,
+  keyH,
+  keyU,
+  keyJ,
+  keyK;
 
 var firstPause = true;
 var firstKeyA = true;
@@ -819,7 +849,7 @@ var firstKeyCNext = true;
 document.onkeydown = function(event) {
   switch (event.keyCode) {
   case 190:
-    if(!firstPause) return;
+    if (!firstPause) return;
     firstPause = false;
     var button = document.getElementById('banana-spiral');
     if (button.className === 'spinning') {
@@ -827,13 +857,13 @@ document.onkeydown = function(event) {
       button.className = '';
     } else {
       playingInterval = setInterval(playBeat, MINUTE / (bpm * 4));
-      var spinSpeed = 9 - (((bpm - 20) / 180) * 8);
+      var spinSpeed = 9 - (bpm - 20) / 180 * 8;
       button.style.animationDuration = spinSpeed + 's';
       button.className = 'spinning';
     }
     break;
   case 65:
-    if(!firstKeyC) return;
+    if (!firstKeyC) return;
     firstKeyC = false;
     c = new Note(261.63);
     c.start();
@@ -842,7 +872,7 @@ document.onkeydown = function(event) {
     break;
 
   case 87:
-    if(!firstKeyCSharp) return;
+    if (!firstKeyCSharp) return;
     firstKeyCSharp = false;
     cSharp = new Note(277.18);
     cSharp.start();
@@ -851,7 +881,7 @@ document.onkeydown = function(event) {
     break;
 
   case 83:
-    if(!firstKeyD) return;
+    if (!firstKeyD) return;
     firstKeyD = false;
     d = new Note(293.66);
     d.start();
@@ -860,7 +890,7 @@ document.onkeydown = function(event) {
     break;
 
   case 69:
-    if(!firstKeyDSharp) return;
+    if (!firstKeyDSharp) return;
     firstKeyDSharp = false;
     dSharp = new Note(311.13);
     dSharp.start();
@@ -869,7 +899,7 @@ document.onkeydown = function(event) {
     break;
 
   case 68:
-    if(!firstKeyE) return;
+    if (!firstKeyE) return;
     firstKeyE = false;
     e = new Note(329.63);
     e.start();
@@ -878,7 +908,7 @@ document.onkeydown = function(event) {
     break;
 
   case 70:
-    if(!firstKeyF) return;
+    if (!firstKeyF) return;
     firstKeyF = false;
     f = new Note(349.23);
     f.start();
@@ -887,7 +917,7 @@ document.onkeydown = function(event) {
     break;
 
   case 84:
-    if(!firstKeyFSharp) return;
+    if (!firstKeyFSharp) return;
     firstKeyFSharp = false;
     fSharp = new Note(369.99);
     fSharp.start();
@@ -896,7 +926,7 @@ document.onkeydown = function(event) {
     break;
 
   case 71:
-    if(!firstKeyG) return;
+    if (!firstKeyG) return;
     firstKeyG = false;
     g = new Note(392);
     g.start();
@@ -905,16 +935,16 @@ document.onkeydown = function(event) {
     break;
 
   case 89:
-    if(!firstKeyGSharp) return;
+    if (!firstKeyGSharp) return;
     firstKeyGSharp = false;
-    gSharp = new Note(415.30);
+    gSharp = new Note(415.3);
     gSharp.start();
     keyY = document.getElementById('g-sharp');
     keyY.className += ' pressed';
     break;
 
   case 72:
-    if(!firstKeyA) return;
+    if (!firstKeyA) return;
     firstKeyA = false;
     a = new Note(440);
     a.start();
@@ -923,7 +953,7 @@ document.onkeydown = function(event) {
     break;
 
   case 85:
-    if(!firstKeyASharp) return;
+    if (!firstKeyASharp) return;
     firstKeyASharp = false;
     aSharp = new Note(466.16);
     aSharp.start();
@@ -932,7 +962,7 @@ document.onkeydown = function(event) {
     break;
 
   case 74:
-    if(!firstKeyB) return;
+    if (!firstKeyB) return;
     firstKeyB = false;
     b = new Note(493.88);
     b.start();
@@ -941,7 +971,7 @@ document.onkeydown = function(event) {
     break;
 
   case 75:
-    if(!firstKeyCNext) return;
+    if (!firstKeyCNext) return;
     firstKeyCNext = false;
     cNext = new Note(523.25);
     cNext.start();
@@ -1048,7 +1078,7 @@ function handlePlayPauseClick(e) {
     bananaSpiral.className = '';
   } else {
     playingInterval = setInterval(playBeat, MINUTE / (bpm * 4));
-    var spinSpeed = 9 - (((bpm - 20) / 180) * 8);
+    var spinSpeed = 9 - (bpm - 20) / 180 * 8;
     bananaSpiral.style.animationDuration = spinSpeed + 's';
     e.target.id = 'playhead';
     bananaSpiral.className = 'spinning';
@@ -1057,19 +1087,18 @@ function handlePlayPauseClick(e) {
 
 //creating a reset button
 var reset = document.getElementById('reset');
-reset.addEventListener('click',resetBeats);
-function resetBeats(){
+reset.addEventListener('click', resetBeats);
+function resetBeats() {
   var allRows = document.querySelectorAll('#grid-beat tr');
   var allCells;
   for (var i = 0; i < allDrums.length; i++) {
     allDrums[i].playTriggers.fill(false);
     allCells = allRows[i].childNodes;
-    for (var j= 1; j < allCells.length; j++) {
+    for (var j = 1; j < allCells.length; j++) {
       allCells[j].className = 'off';
       allCells[j].style.background = 'none';
     }
   }
 
   resetExportCode();
-
 }

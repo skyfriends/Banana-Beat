@@ -1,0 +1,22 @@
+{
+  "name": "drum-machine",
+  "version": "1.0.0",
+  "description": "drum-machine",
+  "main": "app.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skyfriends/drum-machine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/skyfriends/drum-machine/issues"
+  },
+  "homepage": "https://github.com/skyfriends/drum-machine#readme"
+}
