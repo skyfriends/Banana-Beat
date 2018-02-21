@@ -1,5 +1,5 @@
 <p align="center">
-<h1>Banana Beat</h1>
+<h1 align="center">Banana Beat</h1>
 </p>
 
 <p align="center">
