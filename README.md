@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <h4> The only drum machine/synthesizer combo contained in 1000+ lines of javascript that you will ever need.</h4>
+  <h4 align="center"> The only drum machine/synthesizer combo contained in 1000+ lines of javascript that you will ever need.</h4>
   </p>
 
 <p align="center">
