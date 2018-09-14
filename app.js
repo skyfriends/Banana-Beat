@@ -767,6 +767,7 @@ function generatePiano() {
   for (var i = 0; i < pianoLabels.length; i++) {
     pianoKey = document.createElement('td');
     pianoKey.setAttribute('id', pianoLabels[i]);
+    pianoKey.addEventListener('click', handlePianoClick);
     row.appendChild(pianoKey);
     pianoKey.textContent = pianoLabels[i];
   }
@@ -796,13 +797,15 @@ var oscVolume = 0.5;
 function handlePianoVolumeChange(e) {
   oscVolume = e.target.value;
 }
-function Note(frequency) {
+
+function Note(frequency, name){
   this.frequency = frequency * Math.pow(2, octave);
   this.osc = audioContext.createOscillator();
   this.osc.type = waveType;
   this.osc.frequency.value = this.frequency;
   this.gain = audioContext.createGain();
   this.gain.gain.value = oscVolume;
+  this.name = name;
 
   this.osc.connect(this.gain);
   this.gain.connect(audioContext.destination);
@@ -846,6 +849,19 @@ var firstKeyGSharp = true;
 var firstKeyASharp = true;
 var firstKeyCNext = true;
 
+var notes = [];
+function handlePianoClick(e){
+  var clickedKey = e.target.id;
+  console.log(e.target.id);
+  for(var i=0; i<notes.length; i++){
+    if (clickedKey == notes[i].name){
+      var something = new Note(parseInt(notes[i].frequency));
+      something.start();
+    }
+  }
+}
+
+
 document.onkeydown = function(event) {
   switch (event.keyCode) {
   case 190:
@@ -865,7 +881,8 @@ document.onkeydown = function(event) {
   case 65:
     if (!firstKeyC) return;
     firstKeyC = false;
-    c = new Note(261.63);
+    c = new Note(261.63, 'A');
+    notes.push(c);
     c.start();
     keyA = document.getElementById('A');
     keyA.className += ' pressed';
